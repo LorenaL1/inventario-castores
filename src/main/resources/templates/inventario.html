@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Control de Inventarios - Grupo Castores</title>
+    <link th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css}" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Módulo de Inventario</h2>
+        <div>
+            <button th:if="${#lists.contains(session.permisos, 'AGREGAR_NUEVOS_PRODUCTO')}"
+                    class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAgregar">
+                + Agregar Nuevo Producto
+            </button>
+            <a th:href="@{/logout}" class="btn btn-danger btn-sm">Cerrar Sesión</a>
+        </div>
+    </div>
+
+    <div class="alert alert-info d-flex justify-content-between align-items-center py-2">
+        <span>Bienvenido: <strong th:text="${session.usuario}">Usuario</strong> | Rol: <span class="badge bg-dark" th:text="${session.rol}">Rol</span></span>
+        <div>
+            <a th:href="@{/inventario}" class="btn btn-sm btn-outline-primary">Inventario</a>
+
+            <a th:if="${#lists.contains(session.permisos, 'VER_HISTORICO')}"
+               th:href="@{/historico}" class="btn btn-sm btn-outline-secondary">Ver Histórico</a>
+
+            <a th:if="${#lists.contains(session.permisos, 'VER_SALIDAS')}"
+               th:href="@{/salidas}" class="btn btn-sm btn-outline-warning">Módulo Salidas</a>
+        </div>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong th:text="${error}">Mensaje de error</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <strong th:text="${success}">Mensaje de éxito</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre del Producto</th>
+                    <th>Stock Actual</th>
+                    <th>Estatus</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="prod : ${productos}">
+                    <td th:text="${prod.idProducto}">1</td>
+                    <td th:text="${prod.nombre}">Producto A</td>
+                    <td th:text="${prod.cantidad}" class="fw-bold">0</td>
+                    <td>
+                        <span th:if="${prod.estatus}" class="badge bg-success">Activo</span>
+                        <span th:if="${!prod.estatus}" class="badge bg-secondary">Inactivo</span>
+                    </td>
+                    <td>
+                        <div th:if="${#lists.contains(session.permisos, 'AUMENTAR_INVENTARIO')}" class="d-inline">
+                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                    th:data-bs-target="'#modalStock' + ${prod.idProducto}">
+                                Entrada Stock
+                            </button>
+                        </div>
+
+                        <div th:if="${#lists.contains(session.permisos, 'BAJA_REACTIVAR_PRODUCTO')}" class="d-inline">
+                            <a th:if="${prod.estatus}" th:href="@{/inventario/cambiar-estatus/{id}(id=${prod.idProducto}, estatus=false)}"
+                               class="btn btn-sm btn-outline-danger">Dar de Baja</a>
+
+                            <a th:if="${!prod.estatus}" th:href="@{/inventario/cambiar-estatus/{id}(id=${prod.idProducto}, estatus=true)}"
+                               class="btn btn-sm btn-outline-success">Reactivar</a>
+                        </div>
+
+                        <span th:if="${!#lists.contains(session.permisos, 'AUMENTAR_INVENTARIO') and !#lists.contains(session.permisos, 'BAJA_REACTIVAR_PRODUCTO')}"
+                              class="text-muted text-center">- Sin Acciones Autorizadas -</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div th:if="${#lists.contains(session.permisos, 'AGREGAR_NUEVOS_PRODUCTO')}" class="modal fade" id="modalAgregar" tabindex="-1">
+    <div class="modal-dialog">
+        <form th:action="@{/inventario/agregar}" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Registrar Producto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Nombre del Artículo</label>
+                    <input type="text" name="nombre" class="form-content form-control" required maxlength="100">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-toggle="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div th:each="prod : ${productos}" th:if="${#lists.contains(session.permisos, 'AUMENTAR_INVENTARIO')}"
+     th:id="'modalStock' + ${prod.idProducto}" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <form th:action="@{/inventario/aumentar}" method="POST" class="modal-content">
+            <input type="hidden" name="idProducto" th:value="${prod.idProducto}">
+            <div class="modal-header">
+                <h5 class="modal-title" th:text="'Entrada: ' + ${prod.nombre}">Entrada Stock</h5>
+                <button type="button" class="btn-close" data-bs-target="modal" data-bs-toggle="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Cantidad a Aumentar</label>
+                    <input type="number" name="cantidad" class="form-control" required min="-100">
+                    <small class="text-muted">Ingresa un número negativo para forzar el mensaje de error de la prueba.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-warning">Procesar Entrada</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
