@@ -9,6 +9,24 @@
 <div class="container mt-4">
     <h2>Histórico de Movimientos</h2>
 
+    <form th:action="@{/historico}" method="get" class="row mb-3">
+
+        <div class="col-md-4">
+            <select name="tipo" class="form-select">
+                <option value="">Todos los movimientos</option>
+                <option value="ENTRADA">Entradas</option>
+                <option value="SALIDA">Salidas</option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary">
+                Filtrar
+            </button>
+        </div>
+
+    </form>
+
     <table class="table table-bordered">
         <thead>
         <tr>

@@ -25,7 +25,4 @@ public class HistoricoService {
         return historicoRepository.findByTipo(tipo);
     }
 
-    public Historico guardarMovimiento(Historico historico) {
-        return historicoRepository.save(historico);
-    }
 }
